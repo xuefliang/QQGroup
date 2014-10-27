@@ -1,4 +1,4 @@
-file=paste("/home/oracle/","qq.txt",sep="")
+file=paste("qq.txt",sep="")
 
 file.data<-scan(file,what='',sep='\n',encoding="UTF-8")
 
@@ -12,7 +12,7 @@ user.name<-c()
 
 text<-c()
 
-for(i in 7:length(file.data))
+for(i in 8:length(file.data))
 {
   
   reg.time<-regexpr("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]+:[0-9]+:[0-9]+",file.data[i]) #日期时间正则表达式
@@ -52,7 +52,29 @@ split.datetime<-as.data.frame(matrix(unlist(strsplit(as.character(data$time),' '
 
 split.time<-as.data.frame(matrix(unlist(strsplit(as.character(split.datetime$V2),':')),ncol=3,byrow=T))
 
-summary(split.time$V1)
+library(gmodels)
+
+temp <- CrossTable(split.time$V1)
+
+df <-as.data.frame(t(as.data.frame(rbind(dimnames(temp$t)[[2]],temp$t)))) #利用dimnames获得不同时间发言条数
+
+df$V1 <- as.numeric(as.character(df$V1))
+
+df$V2 <- as.numeric(as.character(df$V2))
+
+df <- df[order(df$V1),]
+
+V1 <- c(0:23)
+
+target <- data.frame(V1)
+
+result <- merge(x = target, y = df, by = "V1", all.x=TRUE)
+
+result$V2[is.na(result$V2)] <- 0
+
+library(ggplot2)
+
+ggplot(result,aes(V1,V2))+geom_line()
 
 #合并每个用户的所有留言
 
