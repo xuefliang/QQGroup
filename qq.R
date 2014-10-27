@@ -1,174 +1,105 @@
+library(gmodels)
+library(ggplot2)
+library(rJava)
+library(tm)
+library(Rcpp)
+library(RColorBrewer)
+library(wordcloud)
+#install.packages("Rwordseg", repos = "http://R-Forge.R-project.org")
+library(Rwordseg)
 file=paste("qq.txt",sep="")
-
 file.data<-scan(file,what='',sep='\n',encoding="UTF-8")
-
 #file.data[1:12]
-
 data<-data.frame(user.name=c(),time=c(),text=c())
-
 time<-c()
-
 user.name<-c()
-
 text<-c()
-
-for(i in 8:length(file.data))
+for(i in 9:length(file.data))
 {
-  
   reg.time<-regexpr("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]+:[0-9]+:[0-9]+",file.data[i]) #日期时间正则表达式
-  
   if(reg.time==1) #遍历有效的行数据
   {
     data<-rbind(data,data.frame(time=time,user.name=user.name,text=text))
-    
     text<-c()
-    
     begin<-reg.time
-    
     end<-reg.time+attr(reg.time,"match.length")-1
-    
     time<-substr(file.data[i],begin,end)#读取时间信息
-    
     begin<-as.numeric(reg.time+attr(reg.time,"match.length")+1)
-    
     end<-nchar(file.data[i])
-    
     user.name<-substr(file.data[i],begin,end)
-    
   }
   else
   {
     text<-paste(text,file.data[i])
   }
 }
-
 data$text<-as.character(data$text)
-
 data$user.name<-as.character(data$user.name)
-
 #发言时间
-
 split.datetime<-as.data.frame(matrix(unlist(strsplit(as.character(data$time),' ')),ncol=2,byrow=T))
-
 split.time<-as.data.frame(matrix(unlist(strsplit(as.character(split.datetime$V2),':')),ncol=3,byrow=T))
-
-library(gmodels)
-
 temp <- CrossTable(split.time$V1)
-
 df <-as.data.frame(t(as.data.frame(rbind(dimnames(temp$t)[[2]],temp$t)))) #利用dimnames获得不同时间发言条数
-
 df$V1 <- as.numeric(as.character(df$V1))
-
 df$V2 <- as.numeric(as.character(df$V2))
-
 df <- df[order(df$V1),]
-
 V1 <- c(0:23)
-
 target <- data.frame(V1)
-
 result <- merge(x = target, y = df, by = "V1", all.x=TRUE) #左联
-
 result$V2[is.na(result$V2)] <- 0
-
-library(ggplot2)
-
-ggplot(result,aes(V1,V2))+geom_line()
-
+ggplot(result,aes(V1,V2))+geom_line()+theme_bw()+
+  theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+    ,panel.border = element_blank()
+    ,panel.background = element_blank()
+  ) +theme(axis.line = element_line(color = 'black'))+scale_y_continuous(breaks=seq(0,450,50))+labs(x='时间', y='消息数量（条）')+scale_x_continuous(breaks=seq(0,23,1))
+#+xlim(0,23)
 #合并每个用户的所有留言
-
 user.name<-unique(data$user.name)
-
 text<-c()
-
 text.num<-c()
-
 for(i in 1:length(user.name))
 {
   text.i<-data$text[which(data$user.name==user.name[i])] #用户i的所有留言向量
-  
   text.i.num<-length(text.i) #用户i发几次留言
-  
   for(j in 1:text.i.num)
   {
     text[i]<-paste(text[i],text.i[j],sep=" ") #把所有的留言向量合并成一个元素
   }
-  
   text.num[i]<-text.i.num
 }
-
 user.text<-data.frame(user.name=user.name,text=text,text.num=text.num)
-
 user.text$user.name<-as.character(user.text$user.name)
-
 user.text$text<-as.character(user.text$text)
-
-library(rJava)
-
-#install.packages("Rwordseg", repos = "http://R-Forge.R-project.org")
-
-library(Rwordseg)
-
 rwordseg<-segmentCN(user.text$text,nature=T)
-
 rwordseg.n<-rwordseg
-
 for(i in 1:length(rwordseg))
 {
   rwordseg.n[[i]]<-rwordseg[[i]] [which(names(rwordseg[[i]])=="n")]  #？
 }
-
 #常用话题词云
-
-library(tm)
-
 ovid<-Corpus(VectorSource(rwordseg.n))
-
 inspect(ovid)
-
 ovid<-tm_map(ovid,FUN=removeWords,c("图片","表情","圖片")) #删除qq系统词
-
 inspect(ovid)
-
 dtm<-DocumentTermMatrix(ovid)
-
 #findFreqTerms(dtm, 5)
-
 #findAssocs(dtm,"卡介苗",0.7)
-
 tdm<-TermDocumentMatrix(ovid)
-
 #qq.matrix<-as.matrix(dtm)
-
 #qq.freq<-apply(qq.matrix,2,sum)
-
 #qq.freq.top<-rev(sort(qq.freq))[1:30]
-
 #plot(qq.freq)
-
 #text(c(1:length(qq.freq)),qq.freq,names(qq.freq))
-
 tdm_matrix <- as.matrix(tdm)
-
 v <- sort(rowSums(tdm_matrix),decreasing=T)
-
 data <- data.frame(word=names(v),freq=v)
-
-library(Rcpp)
-
-library(RColorBrewer)
-
-library(wordcloud)
-
 pal2 <- brewer.pal(8,"Dark2")
-
 #png("wordcloud_packages.png", width=1280,height=800)  #词云
-
-#wc<-wordcloud(data$word,data$freq,min.freq=30,max.words=Inf, random.order=FALSE, rot.per=.45, colors=pal2)
-
+#wc<-wordcloud(data$word,data$freq,min.freq=10,max.words=Inf, random.order=FALSE, rot.per=.45, colors=pal2)
 wc<-wordcloud(data$word,data$freq)
-
 #用户-词项网络关系图
 
 from<-c()
