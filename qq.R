@@ -68,7 +68,7 @@ V1 <- c(0:23)
 
 target <- data.frame(V1)
 
-result <- merge(x = target, y = df, by = "V1", all.x=TRUE)
+result <- merge(x = target, y = df, by = "V1", all.x=TRUE) #左联
 
 result$V2[is.na(result$V2)] <- 0
 
