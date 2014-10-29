@@ -8,6 +8,7 @@ library(wordcloud)
 #install.packages("Rwordseg", repos = "http://R-Forge.R-project.org")
 library(Rwordseg)
 library(igraph)
+library(scale)
 file=paste("qq.txt",sep="")
 file.data<-scan(file,what='',sep='\n',encoding="UTF-8")
 #file.data[1:12]
@@ -48,6 +49,8 @@ V1 <- c(0:23)
 target <- data.frame(V1)
 result <- merge(x = target, y = df, by = "V1", all.x=TRUE) #左联
 result$V2[is.na(result$V2)] <- 0
+result$V1 <- paste(result$V1,":00")
+result$V1 <- strptime(result$V1,format="%H")
 ggplot(result,aes(V1,V2))+geom_line()+theme_bw()+
   theme(
     plot.background = element_blank()
@@ -55,7 +58,7 @@ ggplot(result,aes(V1,V2))+geom_line()+theme_bw()+
     ,panel.grid.minor = element_blank()
     ,panel.border = element_blank()
     ,panel.background = element_blank()
-  ) +theme(axis.line = element_line(color = 'black'))+scale_y_continuous(breaks=seq(0,450,50))+labs(x='时间 Time', y='消息数量（条）Number of Information')+scale_x_continuous(breaks=seq(0,23,1))
+  ) +theme(axis.line = element_line(color = 'black'))+scale_y_continuous(breaks=seq(0,450,50))+labs(x='时间 Time', y='消息数量（条）Number of News')+scale_x_datetime(breaks = "3 hour",labels = date_format("%H:%M"))
 #+xlim(0,23)
 #合并每个用户的所有留言
 user.name<-unique(data$user.name)
