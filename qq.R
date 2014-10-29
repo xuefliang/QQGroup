@@ -54,7 +54,7 @@ ggplot(result,aes(V1,V2))+geom_line()+theme_bw()+
     ,panel.grid.minor = element_blank()
     ,panel.border = element_blank()
     ,panel.background = element_blank()
-  ) +theme(axis.line = element_line(color = 'black'))+scale_y_continuous(breaks=seq(0,450,50))+labs(x='时间', y='消息数量（条）')+scale_x_continuous(breaks=seq(0,23,1))
+  ) +theme(axis.line = element_line(color = 'black'))+scale_y_continuous(breaks=seq(0,450,50))+labs(x='时间 Time', y='消息数量（条）Number of Information')+scale_x_continuous(breaks=seq(0,23,1))
 #+xlim(0,23)
 #合并每个用户的所有留言
 user.name<-unique(data$user.name)
@@ -98,7 +98,7 @@ v <- sort(rowSums(tdm_matrix),decreasing=T)
 data <- data.frame(word=names(v),freq=v)
 pal2 <- brewer.pal(8,"Dark2")
 #png("wordcloud_packages.png", width=1280,height=800)  #词云
-#wc<-wordcloud(data$word,data$freq,min.freq=10,max.words=Inf, random.order=FALSE, rot.per=.45, colors=pal2)
+#wc<-wordcloud(data$word,data$freq,min.freq=2,max.words=Inf, random.order=FALSE, rot.per=.45, colors=pal2)
 wc<-wordcloud(data$word,data$freq)
 #用户-词项网络关系图
 
