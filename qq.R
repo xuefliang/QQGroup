@@ -1,14 +1,14 @@
 library(gmodels)
-library(ggplot2)
 library(rJava)
 library(tm)
+library(ggplot2)
 library(Rcpp)
 library(RColorBrewer)
 library(wordcloud)
 #install.packages("Rwordseg", repos = "http://R-Forge.R-project.org")
 library(Rwordseg)
 library(igraph)
-library(scale)
+library(scales)
 file=paste("qq.txt",sep="")
 file.data<-scan(file,what='',sep='\n',encoding="UTF-8")
 #file.data[1:12]
@@ -126,9 +126,9 @@ init.igraph<-function(data,dir=F){
   g
 }
 g.dir<-init.igraph(data.frame(from=from,to=to),T)
-degree=200
-indexword<-(degree(g.dir,mode="in")>=degree)
-indexuser<-(degree(g.dir,mode="out")>=degree)
+#degree=50
+indexword<-(degree(g.dir,mode="in")>=50)
+indexuser<-(degree(g.dir,mode="out")>=150)
 words<-degree(g.dir,mode='in')[indexword]
 user<-degree(g.dir,mode="out")[indexuser]
 wordname<-V(g.dir)[indexword]$label
@@ -136,12 +136,15 @@ username<-V(g.dir)[indexuser]$label
 label=NA
 label[indexword]<-wordname
 label[indexuser]<-username
+V(g.dir)$size=1
+V(g.dir)[user.index]$color="green"
+V(g.dir)[words.index]$color="red"
 svg("userwords.svg",width=40,height=40)
 plot(g.dir,layout=layout.fruchterman.reingold,vertex.size=1,vertex.label=label,vertex.label.family="GB1")
 dev.off()
 
 #重点词项网络图
-std.degree.words=500
+std.degree.words=50 #点的入度大于50，则为重点词条
 words.index<-(degree(g.dir,mode="in")>=std.degree.words)
 words<-degree(g.dir,mode="in")[words.index]
 names(words)<-V(g.dir)[words.index]$label
@@ -159,7 +162,7 @@ plot(g.dir,layout=layout.fruchterman.reingold,vertex.label=label,vertex.label.ce
 dev.off()
 
 #重点用户网络图
-std.degree.user=6
+std.degree.user=150 #点的出度大于150，则为重点词条
 user.index<-(degree(g.dir,mode="out")>=std.degree.user)
 user<-degree(g.dir,mode="out")[user.index]
 names(user)<-V(g.dir)[user.index]$label
