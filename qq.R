@@ -9,6 +9,7 @@ library(wordcloud)
 library(Rwordseg)
 library(igraph)
 library(scales)
+library(plyr)
 
 file=paste("qq.txt",sep="")
 file.data<-scan(file,what='',sep='\n',encoding="UTF-8")
@@ -60,8 +61,13 @@ ggplot(result,aes(V1,V2))+geom_line()+theme_bw()+
     ,panel.grid.minor = element_blank()
     ,panel.border = element_blank()
     ,panel.background = element_blank()
-  ) +theme(axis.line = element_line(color = 'black'))+scale_y_continuous(breaks=seq(0,450,50))+labs(x='时间 Time', y='消息数量（条）Number of News')+scale_x_datetime(breaks = "3 hour",labels = date_format("%H:%M"))
+  ) +theme(axis.line = element_line(color = 'black'))+scale_y_continuous(breaks=seq(0,450,50))+labs(x='时间 Time', y='消息数量（条）Number of News')+scale_x_datetime(breaks = "3 hour",labels = date_format("%H:%M"))+coord_equal(148)
 #+xlim(0,23)
+
+#生成频数表
+result2 <- result
+result2$V1 <- substr(result2$V1,11,16)
+result2 <- rename(result2,c("V1"="Time","V2"="Freq"))
 
 #常用话题词云
 ovid<-Corpus(VectorSource(rwordseg.n))
